@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 # --- Random generators: one independent stream per job ----------------------
 # Changing the texture code no longer changes the weather, and vice versa.
-SEED = 62
+SEED = 48
 seed_texture, seed_weather, seed_bio = np.random.SeedSequence(SEED).spawn(3)
 rng_texture = np.random.default_rng(seed_texture)
 rng_weather = np.random.default_rng(seed_weather)
@@ -11,7 +11,7 @@ rng_bio = np.random.default_rng(seed_bio)
 
 size = 100
 DAYS_PER_YEAR = 365
-YEARS = 10
+YEARS = 500
 
 # --- Seasons ----------------------------------------------------------------
 RAIN_PROB_BY_MONTH = np.array([0.15, 0.15, 0.25, 0.35, 0.35, 0.20,
@@ -129,12 +129,12 @@ for t in range(n_days):
     history["mean_memory"][t] = damp_memory.mean()
     history["moss_coverage"][t] = moss.mean()
 
-    if t % 15 == 0:
+    if t % 240 == 0:
         img1.set_data(dampness)
         img2.set_data(moss)
         month = MONTH_NAMES[int((t % DAYS_PER_YEAR) / DAYS_PER_YEAR * 12)]
         fig.suptitle(f"Year {t // DAYS_PER_YEAR + 1}, {month}")
-        plt.pause(0.001)
+        plt.pause(0.0001)
 
 np.savez("history.npz", **history)   # keep it, to compare with later runs
 
