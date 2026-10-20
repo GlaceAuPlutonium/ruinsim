@@ -9,5 +9,6 @@ wheels/
 # Virtual environments
 .venv
 
-# Old files
+# Old files and others
 .old
+history.npz

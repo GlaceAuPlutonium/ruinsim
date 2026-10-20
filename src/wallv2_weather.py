@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+from climate import DAYS_PER_YEAR, MONTH_NAMES, genClimate, rainProb, spellLengths
+
 # --- Random generators: one independent stream per job ----------------------
 SEED = 48
 seed_texture, seed_weather, seed_bio = np.random.SeedSequence(SEED).spawn(3)
@@ -9,28 +11,9 @@ rng_weather = np.random.default_rng(seed_weather)
 rng_bio = np.random.default_rng(seed_bio)
 
 size = 100
-DAYS_PER_YEAR = 365
-YEARS = 15
-
-# --- Seasons ----------------------------------------------------------------
-RAIN_PROB_BY_MONTH = np.array([0.15, 0.15, 0.25, 0.35, 0.35, 0.20,
-                               0.10, 0.12, 0.30, 0.40, 0.30, 0.18])
-month_centers = (np.arange(12) + 0.5) * DAYS_PER_YEAR / 12
-MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-               "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-
-
-def rain_probability(day):
-    return np.interp(day % DAYS_PER_YEAR, month_centers,
-                     RAIN_PROB_BY_MONTH, period=DAYS_PER_YEAR)
-
-
-# How strongly rainy days cluster together. 0 = every day independent (old behavior),
-# higher = longer wet and dry spells. Sensible range 0 to 0.6.
-RAIN_PERSISTENCE = 0.3
+YEARS = 80
 
 # --- Water parameters (all rates are per day) --------------------------------
-MEAN_RAIN = 0.12
 SPREAD = 0.2             # must stay <= 0.25, see the assert below
 DRYING = 0.15            # average drying rate per day
 POROSITY_EFFECT = 1.0    # 0 = uniform wall; sensible range 0 to 1.4
@@ -52,40 +35,6 @@ MOSS_DIEBACK = 0.01
 SOIL_BUILD = 0.0008      # per day: moss and its fringe build substrate
 SOIL_LOSS = 0.0003       # per day: rain washes soil off where no moss protects it
 SOIL_EFFECT = 0.6        # max fraction of the porosity gap that soil can fill
-
-
-# --- Weather: generated once, before the simulation --------------------------
-def generate_weather(n_days, rng):
-    """Rain amount for every day (0 on dry days), with wet and dry spells.
-
-    Each day is wet or dry. The chance of a wet day depends on the season AND on
-    whether yesterday was wet. The monthly table still means "fraction of rainy
-    days": persistence changes how days cluster, not how many are rainy.
-    """
-    rain = np.zeros(n_days)
-    was_wet = False
-    for day in range(n_days):
-        p = rain_probability(day)                       # seasonal chance of rain
-        if was_wet:
-            p_wet = p + RAIN_PERSISTENCE * (1 - p)      # rain tends to continue
-        else:
-            p_wet = p * (1 - RAIN_PERSISTENCE)          # dry tends to continue
-        roll = rng.random()                             # always draw both numbers
-        amount = rng.exponential(MEAN_RAIN)             # to keep the stream aligned
-        was_wet = roll < p_wet
-        if was_wet:
-            rain[day] = amount
-    return rain
-
-
-def spell_lengths(is_wet):
-    """Lengths of consecutive wet runs and dry runs."""
-    change = np.flatnonzero(np.diff(is_wet.astype(int))) + 1
-    runs = np.split(is_wet, change)
-    wet = [len(r) for r in runs if r[0]]
-    dry = [len(r) for r in runs if not r[0]]
-    return wet, dry
-
 
 # --- Wall texture -------------------------------------------------------------
 def smooth_noise(sigma):
@@ -149,9 +98,9 @@ def step(rain_today, d, mem, m, soil):
 
 # --- Weather and history ------------------------------------------------------
 n_days = DAYS_PER_YEAR * YEARS
-weather = generate_weather(n_days, rng_weather)
+weather = genClimate(n_days, rng_weather)
 
-wet, dry = spell_lengths(weather > 0)
+wet, dry = spellLengths(weather > 0)
 print(f"Rainy days per year: {(weather > 0).sum() / YEARS:.1f}")
 print(f"Wet spells: mean {np.mean(wet):.1f} days, longest {max(wet)}")
 print(f"Dry spells: mean {np.mean(dry):.1f} days, longest {max(dry)}")
@@ -183,13 +132,13 @@ for t in range(n_days):
     history["moss_coverage"][t] = moss.mean()
     history["mean_soil"][t] = soil.mean()
 
-    if t % 30 == 0:
+    if t % 360 == 0:
         img_damp.set_data(dampness)
         img_moss.set_data(moss)
         img_soil.set_data(soil)
         month = MONTH_NAMES[int((t % DAYS_PER_YEAR) / DAYS_PER_YEAR * 12)]
         fig.suptitle(f"Year {t // DAYS_PER_YEAR + 1}, {month}")
-        plt.pause(0.001)
+        plt.pause(0.0001)
 
 np.savez("history.npz", **history)   # keep it, to compare with later runs
 
@@ -207,8 +156,8 @@ axes[2].set_ylabel("mean damp memory")
 axes[2].legend(loc="upper right", fontsize=8)
 axes[3].plot(years, history["moss_coverage"], color="green")
 axes[3].set_ylabel("moss coverage")
-#axes[4].plot(years, history["mean_soil"], color="saddlebrown")
-#axes[4].set_ylabel("mean soil")
-#axes[4].set_xlabel("years")
+axes[4].plot(years, history["mean_soil"], color="saddlebrown")
+axes[4].set_ylabel("mean soil")
+axes[4].set_xlabel("years")
 plt.tight_layout()
 plt.show()

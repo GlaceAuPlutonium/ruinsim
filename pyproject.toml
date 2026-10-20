@@ -3,6 +3,9 @@ name = "ruinsim"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
+authors = [
+    { name = "gap", email = "glaceauplutonium@noreply.codeberg.org" }
+]
 requires-python = ">=3.15"
 dependencies = [
     "matplotlib>=3.11.2",
@@ -13,5 +16,5 @@ dependencies = [
 ruinsim = "ruinsim:main"
 
 [build-system]
-requires = ["uv_build>=0.13.1,<0.14.0"]
+requires = ["uv_build>=0.12.9,<0.13.0"]
 build-backend = "uv_build"

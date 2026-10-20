@@ -1,5 +1,7 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+
+from climate import DAYS_PER_YEAR, MONTH_NAMES, genClimate, spellLengths
 
 # --- Random generators: one independent stream per job ----------------------
 SEED = 48
@@ -9,24 +11,9 @@ rng_weather = np.random.default_rng(seed_weather)
 rng_bio = np.random.default_rng(seed_bio)
 
 size = 100
-DAYS_PER_YEAR = 365
-YEARS = 450
-
-# --- Seasons ----------------------------------------------------------------
-RAIN_PROB_BY_MONTH = np.array([0.15, 0.15, 0.25, 0.35, 0.35, 0.20,
-                               0.10, 0.12, 0.30, 0.40, 0.30, 0.18])
-month_centers = (np.arange(12) + 0.5) * DAYS_PER_YEAR / 12
-MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-               "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-
-
-def rain_probability(day):
-    return np.interp(day % DAYS_PER_YEAR, month_centers,
-                     RAIN_PROB_BY_MONTH, period=DAYS_PER_YEAR)
-
+YEARS = 80
 
 # --- Water parameters (all rates are per day) --------------------------------
-MEAN_RAIN = 0.12
 SPREAD = 0.2             # must stay <= 0.25, see the assert below
 DRYING = 0.15            # average drying rate per day
 POROSITY_EFFECT = 1.0    # 0 = uniform wall; sensible range 0 to 1.4
@@ -48,7 +35,6 @@ MOSS_DIEBACK = 0.01
 SOIL_BUILD = 0.0008      # per day: moss and its fringe build substrate
 SOIL_LOSS = 0.0003       # per day: rain washes soil off where no moss protects it
 SOIL_EFFECT = 0.6        # max fraction of the porosity gap that soil can fill
-
 
 # --- Wall texture -------------------------------------------------------------
 def smooth_noise(sigma):
@@ -79,16 +65,11 @@ def neighbor_sum(a):
     return p[:-2, 1:-1] + p[2:, 1:-1] + p[1:-1, :-2] + p[1:-1, 2:]
 
 
-def step(day, d, mem, m, soil):
+def step(rain_today, d, mem, m, soil):
     # --- The surface today = bare wall + whatever soil has built up on it ---
     porosity_eff = porosity + SOIL_EFFECT * soil * (1 - porosity)
     drying_today = DRYING * (1 - POROSITY_EFFECT * (porosity_eff - 0.5) * 1.4)
     drying_today = np.clip(drying_today, MIN_DRYING, MAX_DRYING)
-
-    # --- Weather (always draw both numbers to keep the stream aligned) ---
-    roll = rng_weather.random()
-    amount = rng_weather.exponential(MEAN_RAIN)
-    rain_today = amount if roll < rain_probability(day) else 0.0
 
     # --- Water ---
     d = d + rain_today + leak
@@ -112,11 +93,18 @@ def step(day, d, mem, m, soil):
     soil = soil + SOIL_BUILD * pressure * (1 - soil) - SOIL_LOSS * soil * (1 - m)
     soil = np.clip(soil, 0, 1)
 
-    return d, mem, m, soil, rain_today
+    return d, mem, m, soil
 
 
-# --- History: one number per day, for plotting and comparing runs ------------
+# --- Weather and history ------------------------------------------------------
 n_days = DAYS_PER_YEAR * YEARS
+weather = genClimate(n_days, rng_weather)
+
+wet, dry = spellLengths(weather > 0)
+print(f"Rainy days per year: {(weather > 0).sum() / YEARS:.1f}")
+print(f"Wet spells: mean {np.mean(wet):.1f} days, longest {max(wet)}")
+print(f"Dry spells: mean {np.mean(dry):.1f} days, longest {max(dry)}")
+
 history = {
     "rain": np.zeros(n_days),
     "mean_dampness": np.zeros(n_days),
@@ -136,9 +124,9 @@ axs[1, 0].set_title("Soil")
 axs[1, 1].set_title("Porosity of the bare wall (dark = holds water)")
 
 for t in range(n_days):
-    dampness, damp_memory, moss, soil, rain_today = step(t, dampness, damp_memory, moss, soil)
+    dampness, damp_memory, moss, soil = step(weather[t], dampness, damp_memory, moss, soil)
 
-    history["rain"][t] = rain_today
+    history["rain"][t] = weather[t]
     history["mean_dampness"][t] = dampness.mean()
     history["mean_memory"][t] = damp_memory.mean()
     history["moss_coverage"][t] = moss.mean()
@@ -152,7 +140,7 @@ for t in range(n_days):
         fig.suptitle(f"Year {t // DAYS_PER_YEAR + 1}, {month}")
         plt.pause(0.0001)
 
-np.savez("history.npz", **history)   # keep it, to compare with later runs
+np.savez("history.npz", **history) # type: ignore
 
 # --- Plot the history -------------------------------------------------------
 years = np.arange(n_days) / DAYS_PER_YEAR
