@@ -3,10 +3,11 @@ import numpy as np
 from params import *  # pyright: ignore[reportWildcardImportFromLibrary]
 
 SEED = 48
-seed_texture, seed_weather, seed_bio = np.random.SeedSequence(SEED).spawn(3)
+seed_texture, seed_weather, seed_bio, seed_ph = np.random.SeedSequence(SEED).spawn(4)
 rng_texture = np.random.default_rng(seed_texture)
 rng_weather = np.random.default_rng(seed_weather)
 rng_bio = np.random.default_rng(seed_bio)
+rng_ph = np.random.default_rng(seed_ph)
 
 size = 100
 
@@ -54,17 +55,18 @@ def step(rain_today, d, mem, m, soil):
     mem = mem + MEMORY * (d - mem)
 
     # Moss
-    can_grow = mem > MOSS_GROW_ABOVE
-    dying = mem < MOSS_DIE_BELOW
-    nearby_moss = neighborSum(m) / 4
-    spore_lands = rng_bio.random(d.shape) < SPORE_CHANCE
-    growth = MOSS_GROWTH * (spore_lands + nearby_moss) * (1 - m) * can_grow
-    dieback = MOSS_DIEBACK * m * dying
-    m = np.clip(m + growth - dieback, 0, 1)
+    if MOSS_ENABLE:
+        can_grow = mem > MOSS_GROW_ABOVE
+        dying = mem < MOSS_DIE_BELOW
+        nearby_moss = neighborSum(m) / 4
+        spore_lands = rng_bio.random(d.shape) < SPORE_CHANCE
+        growth = MOSS_GROWTH * (spore_lands + nearby_moss) * (1 - m) * can_grow
+        dieback = MOSS_DIEBACK * m * dying
+        m = np.clip(m + growth - dieback, 0, 1)
 
     # Soil: built by moss and its fringe, washed off where there is no moss
-    pressure = np.clip(m + nearby_moss, 0, 1)
-    soil = soil + SOIL_BUILD * pressure * (1 - soil) - SOIL_LOSS * soil * (1 - m)
-    soil = np.clip(soil, 0, 1)
+        pressure = np.clip(m + nearby_moss, 0, 1)
+        soil = soil + SOIL_BUILD * pressure * (1 - soil) - SOIL_LOSS * soil * (1 - m)
+        soil = np.clip(soil, 0, 1)
 
     return d, mem, m, soil

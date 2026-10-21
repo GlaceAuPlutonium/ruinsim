@@ -16,7 +16,12 @@ SPORE_CHANCE = 0.00002
 MOSS_GROWTH = 0.006
 MOSS_DIEBACK = 0.01
 
+MOSS_ENABLE = False
+
 # Soil parameters
 SOIL_BUILD = 0.0008      # per day: moss and its fringe build substrate
 SOIL_LOSS = 0.0003       # per day: rain washes soil off where no moss protects it
 SOIL_EFFECT = 0.6        # max fraction of the porosity gap that soil can fill
+
+# Rain pH
+PH_VAR = 0.15
