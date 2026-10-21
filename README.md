@@ -70,3 +70,10 @@ Some parameters may later be removed.
 - First with a few real buildings and their surrounding terrain, classify materials and building parts
 - Replace monthyl table with real location-specific climate data
 - Actual real world building but that seems a bit far-stretched
+
+## Dependencies
+
+- numpy
+- matplotlib
+
+Using Python 3.15
