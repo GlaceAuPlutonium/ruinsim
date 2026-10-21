@@ -1,6 +1,7 @@
 # Time damage simulation and rendering engine
 
-WIP
+Simulating the damages of time on actual human structures, with real world data and realistic decay 🌿 🏢 \
+**WIP**
 
 ## What is this ?
 
