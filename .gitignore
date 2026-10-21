@@ -11,4 +11,4 @@ wheels/
 
 # Old files and others
 .old
-history.npz
+src/history.npz
