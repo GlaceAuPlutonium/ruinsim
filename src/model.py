@@ -10,7 +10,7 @@ rng_bio = np.random.default_rng(seed_bio)
 
 size = 100
 
-# --- Wall texture -------------------------------------------------------------
+# Wall texture
 def smoothNoise(sigma):
     """Random noise blurred at a given scale (in cells), then normalized."""
     white = rng_texture.standard_normal((size, size))
@@ -23,7 +23,7 @@ def smoothNoise(sigma):
 
 mix = 0.6 * smoothNoise(6) + 0.4 * smoothNoise(2)
 mix = (mix - mix.mean()) / mix.std()
-porosity = 1 / (1 + np.exp(-1.5 * mix))     # the bare wall: fixed over time
+porosity = 1 / (1 + np.exp(-1.5 * mix))     # the bare wall, fixed over time
 
 leak = np.zeros((size, size))
 leak[0:3, 68:72] = LEAK_AMOUNT
@@ -40,12 +40,12 @@ def neighborSum(a):
 
 
 def step(rain_today, d, mem, m, soil):
-    # --- The surface today = bare wall + whatever soil has built up on it ---
+    # The surface today = bare wall + whatever soil has built up on it
     porosity_eff = porosity + SOIL_EFFECT * soil * (1 - porosity)
     drying_today = DRYING * (1 - POROSITY_EFFECT * (porosity_eff - 0.5) * 1.4)
     drying_today = np.clip(drying_today, MIN_DRYING, MAX_DRYING)
 
-    # --- Water ---
+    # Water
     d = d + rain_today + leak
     d = d + SPREAD * (neighborSum(d) - 4 * d)
     d = d * (1 - drying_today)
@@ -53,7 +53,7 @@ def step(rain_today, d, mem, m, soil):
 
     mem = mem + MEMORY * (d - mem)
 
-    # --- Moss ---
+    # Moss
     can_grow = mem > MOSS_GROW_ABOVE
     dying = mem < MOSS_DIE_BELOW
     nearby_moss = neighborSum(m) / 4
@@ -62,7 +62,7 @@ def step(rain_today, d, mem, m, soil):
     dieback = MOSS_DIEBACK * m * dying
     m = np.clip(m + growth - dieback, 0, 1)
 
-    # --- Soil: built by moss and its fringe, washed off where there is no moss ---
+    # Soil: built by moss and its fringe, washed off where there is no moss
     pressure = np.clip(m + nearby_moss, 0, 1)
     soil = soil + SOIL_BUILD * pressure * (1 - soil) - SOIL_LOSS * soil * (1 - m)
     soil = np.clip(soil, 0, 1)

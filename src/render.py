@@ -26,7 +26,7 @@ class LiveView:
         plt.pause(0.0001)
 
 
-# --- Plot the history -------------------------------------------------------
+# Plot the history
 def plotHistory(history, n_days):
     years = np.arange(n_days) / DAYS_PER_YEAR
     _fig2, axes = plt.subplots(5, 1, figsize=(11, 11), sharex=True)
