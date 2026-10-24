@@ -3,12 +3,13 @@ import numpy as np
 from params import *  # pyright: ignore[reportWildcardImportFromLibrary]
 
 SEED = 48
-seed_texture, seed_weather, seed_bio, seed_ph, seed_temp = np.random.SeedSequence(SEED).spawn(5)
+seed_texture, seed_weather, seed_bio, seed_ph, seed_temp, seed_dtr = np.random.SeedSequence(SEED).spawn(6)
 rng_texture = np.random.default_rng(seed_texture)
 rng_weather = np.random.default_rng(seed_weather)
 rng_bio = np.random.default_rng(seed_bio)
 rng_ph = np.random.default_rng(seed_ph)
 rng_temp = np.random.default_rng(seed_temp)
+rng_dtr = np.random.default_rng(seed_dtr)
 
 size = 100
 

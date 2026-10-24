@@ -1,3 +1,7 @@
+# Rain
+RAIN_PERSISTENCE = 0.3
+MEAN_RAIN = 0.12
+
 # Water parameters (all rates are per day)
 SPREAD = 0.2             # must stay <= 0.25, see the assert below
 DRYING = 0.15            # average drying rate per day
@@ -27,8 +31,12 @@ SOIL_EFFECT = 0.6        # max fraction of the porosity gap that soil can fill
 PH_VAR = 0.15
 
 # Temperature
-TEMP_STD = 3.5            # std of the daily anomaly around the monthly mean (°C)
 TEMP_PERSISTENCE = 0.75   # day-to-day correlation of the anomaly (0 = independent)
-RAIN_COOLING = 2.0        # wet days are this much cooler than dry days (°C)
 
-assert 0<=TEMP_PERSISTENCE < 1
+WET_DTR_EFFECT = 0.35   # wet days have a range ~35% smaller than dry days
+DTR_NOISE = 0.25        # day-to-day variation of the range (fraction)
+MIN_DTR = 1.0           # safety floor (°C)
+
+assert 0<=TEMP_PERSISTENCE < 1, "TEMP_PERSISTENCE must be between 0 and 1 else the temperature calculation will fail"
+assert 0 <= WET_DTR_EFFECT < 1
+assert DTR_NOISE >= 0
