@@ -14,7 +14,7 @@ That's the idea : Taking a normal building, passing it through an engine that si
 
 The simulation runs on a 100×100 grid (for now, building faces later) representing a patch of concrete wall (more materials later), one step per day, for `YEARS` amount of years.
 
-1. `climate.py` pre-computes the whole rain (and later climate) history before the simulation starts. Each day is wet or dry. The chance of a wet day follows a monthly table (interpolated smoothly between month centers), and a persistence term makes wet days and dry days cluster into spells. On wet days, the rain amount is drawn from an exponential distribution.
+1. `climate.py` pre-computes the whole climate history before the simulation starts. Each day is wet or dry. The chance of a wet day follows a monthly table (interpolated smoothly between month centers), and a persistence term makes wet days and dry days cluster into spells. On wet days, the rain amount is drawn from an exponential distribution.
 2. `model.py` builds the wall and runs the simulation with `step`. At the start it creates the fixed porosity map and the empty state grids: dampness, damp memory, moss and soil.
 3. `main.py` ties everything together. It calculates the weather, loops `step` over every day, records mean values into `history`, refreshes the live view, saves `history.npz` and plots the full history.
 4. `render.py` draws the live 2×2 window and the final five-panel plot.
@@ -48,12 +48,16 @@ Each day in `step` goes through this chain:
 | `MEAN_RAIN` | 0.12 | Mean rain amount on a wet day |
 | `SEED`, `size` | 48, 100 | Reproducibility and grid size |
 | `PH_VAR` | 0.15 | Rain pH variation |
+| `TEMP_PERSISTENCE` | 0.75 | Day-to-day correlation of temp anomaly |
+| `WET_DTR_EFFECT` | 0.35 | Wet days have a range ~35% smaller than dry days |
+| `DTR_NOISE` | 0.25 | Day-to-day variation of the range (fraction) |
+| `MIN_DTR` | 1.0 | Safety floor (°C) |
 
 Some parameters may later be removed.
 ## Roadmap
 
 **Soon : finish climate engine and base components**
-- Add temperature, humidity, sun exposure/UV, wind and and their associated effects
+- Add humidity, sun exposure/UV, wind and and their associated effects
 - All of them as monthly tables (except pH), and later per region
 - Test each one alone with moss disabled, then connect them to moss.
 - Switch moss death to dormant state for short term drying
