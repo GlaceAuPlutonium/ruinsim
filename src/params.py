@@ -25,3 +25,10 @@ SOIL_EFFECT = 0.6        # max fraction of the porosity gap that soil can fill
 
 # Rain pH
 PH_VAR = 0.15
+
+# Temperature
+TEMP_STD = 3.5            # std of the daily anomaly around the monthly mean (°C)
+TEMP_PERSISTENCE = 0.75   # day-to-day correlation of the anomaly (0 = independent)
+RAIN_COOLING = 2.0        # wet days are this much cooler than dry days (°C)
+
+assert 0<=TEMP_PERSISTENCE < 1

@@ -47,16 +47,18 @@ Each day in `step` goes through this chain:
 | `RAIN_PERSISTENCE` | 0.3 | Clustering of wet and dry spells |
 | `MEAN_RAIN` | 0.12 | Mean rain amount on a wet day |
 | `SEED`, `size` | 48, 100 | Reproducibility and grid size |
+| `PH_VAR` | 0.15 | Rain pH variation |
 
 Some parameters may later be removed.
 ## Roadmap
 
 **Soon : finish climate engine and base components**
-- Add temperature, humidity, sun exposure/UV, wind and rain pH and their associated effects
+- Add temperature, humidity, sun exposure/UV, wind and and their associated effects
 - All of them as monthly tables (except pH), and later per region
 - Test each one alone with moss disabled, then connect them to moss.
 - Switch moss death to dormant state for short term drying
 - Add different materials with associated parameters
+- Refine pH model, higher noise, take into account logarithmic scale, draw noise once per wet spell, store acid load (10-pH + rain_mm) to use later
 
 **Later : move to 3D**
 - Keep the simulation headless in Python (possibly Rust later) and feed the data to a separate renderer (Blender for very early tests, then UE5)
