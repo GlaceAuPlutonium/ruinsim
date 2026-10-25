@@ -40,3 +40,10 @@ MIN_DTR = 1.0           # safety floor (°C)
 assert 0<=TEMP_PERSISTENCE < 1, "TEMP_PERSISTENCE must be between 0 and 1 else the temperature calculation will fail"
 assert 0 <= WET_DTR_EFFECT < 1
 assert DTR_NOISE >= 0
+
+# Humidity
+RAIN_HUM_EFFECT = 0.5     # fraction of the headroom gained on a wet day
+HUM_NOISE = 0.25          # std of the anomaly, as a fraction of the headroom
+HUM_PERSISTENCE = 0.6
+MIN_HUM = 0.15            # safety floor
+HUM_TEMP_COUPLING = 0.2

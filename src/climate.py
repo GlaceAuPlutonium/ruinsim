@@ -1,12 +1,11 @@
 # Contains climate pre-calc algorithm. Rain, wet/dry spells, temperature, rain pH, humidity (upcoming), sun exposure (upcoming), wind (upcoming)
 import numpy as np
 
-from params import DTR_NOISE, MEAN_RAIN, MIN_DTR, PH_VAR, RAIN_PERSISTENCE, TEMP_PERSISTENCE, WET_DTR_EFFECT
+from params import DTR_NOISE, HUM_NOISE, HUM_PERSISTENCE, HUM_TEMP_COUPLING, MEAN_RAIN, MIN_DTR, MIN_HUM, PH_VAR, RAIN_HUM_EFFECT, RAIN_PERSISTENCE, TEMP_PERSISTENCE, WET_DTR_EFFECT
 
 DAYS_PER_YEAR = 365
 MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-
 month_centers = (np.arange(12) + 0.5) * DAYS_PER_YEAR / 12
 
 RAIN_PROB_BY_MONTH = np.array([0.15, 0.15, 0.25, 0.35, 0.35, 0.20,
@@ -25,34 +24,35 @@ RAIN_COOLING_MONTH = np.array([-1.0, -1.0, -0.5, 0.5, 1.0, 1.5,
                                2.5, 2.5, 1.5, 0.0, -0.5, -1.0])
 
 TMIN_MONTH = np.array([1.1, 1.4, 4.2, 7.2, 11.2, 15.0,
-                      17.0, 16.6, 12.8, 9.6, 4.9, 2.0])
+                       17.0, 16.6, 12.8, 9.6, 4.9, 2.0])
 TMAX_MONTH = np.array([7.1, 9.0, 13.8, 17.4, 21.5, 25.6,
-                      28.2, 28.0, 23.1, 17.7, 11.4, 7.7])
+                       28.2, 28.0, 23.1, 17.7, 11.4, 7.7])
 
 DTR_MONTH = TMAX_MONTH - TMIN_MONTH
 # dtr value is obtained with Tmax and Tmin values that comes from Lyon-Bron station (69) 1991-2020, see https://www.infoclimat.fr/climatologie/normales-records/1991-2020/lyon-bron/valeurs/07480.html
 
+HUMIDITY_MONTH = np.array([0.900, 0.856, 0.811, 0.770, 0.758, 0.717,
+                           0.661, 0.647, 0.718, 0.815, 0.882, 0.905])
+# relative humidity from NASA/POWER Source Native Resolution Climatology in LST, MERRA-2 instrument, 1991-2020, Lyon-Bron station
+
 
 def rainProb(day):
-    return np.interp(day % DAYS_PER_YEAR, month_centers,
-                     RAIN_PROB_BY_MONTH, period=DAYS_PER_YEAR)
+    return np.interp(day % DAYS_PER_YEAR, month_centers, RAIN_PROB_BY_MONTH, period=DAYS_PER_YEAR)
 
-def genClimate(n_days, rng, rng_ph, rng_temp, rng_dtr):
-    """Rain amount for every day (0 on dry days), with wet/dry spells.
-
-    Each day is wet or dry. Chance of a wet day depends on the season AND on
-    whether yesterday was wet. Monthly table still means "fraction of rainy
-    days": persistence changes how days cluster, not how many are rainy.
-    """
+def genClimate(n_days, rng, rng_ph, rng_temp, rng_dtr, rng_hum):
     rain = np.zeros(n_days)
     pH = np.full(n_days, np.nan)
     temp = np.zeros(n_days)
     tmin = np.zeros(n_days)
     tmax = np.zeros(n_days)
+    humidity = np.zeros(n_days)
+
     z = 0.0
+    zh = 0.0
     was_wet = False
+
     for day in range(n_days):
-        p = rainProb(day)                       # seasonal chance of rain
+        p = rainProb(day)
         if was_wet:
             p_wet = p + RAIN_PERSISTENCE * (1 - p)      # rain tends to continue
         else:
@@ -79,10 +79,16 @@ def genClimate(n_days, rng, rng_ph, rng_temp, rng_dtr):
         dtr = max(dtr, MIN_DTR)
         tmax[day] = temp[day] + dtr / 2
         tmin[day] = temp[day] - dtr / 2
-    return rain, pH, temp, tmin, tmax
+
+        # humidity
+        base_hum = np.interp(day % DAYS_PER_YEAR, month_centers, HUMIDITY_MONTH, period=DAYS_PER_YEAR)
+        headroom = 1 - base_hum
+        zh = HUM_PERSISTENCE * zh + np.sqrt(1 - HUM_PERSISTENCE**2) * rng_hum.standard_normal()
+        humidity[day] = np.clip(base_hum + headroom * (RAIN_HUM_EFFECT * (was_wet - p) - HUM_TEMP_COUPLING * z + HUM_NOISE * zh), MIN_HUM, 1.0)
+
+    return rain, pH, temp, tmin, tmax, humidity
 
 def spellLengths(is_wet):
-    """Lengths of consecutive wet runs and dry runs."""
     change = np.flatnonzero(np.diff(is_wet.astype(int))) + 1
     runs = np.split(is_wet, change)
     wet = [len(r) for r in runs if r[0]]
