@@ -12,6 +12,8 @@ That's the idea : Taking a normal building, passing it through an engine that si
 
 ## How the program works
 
+**⚠️ Outdated, i'll rewrite it**
+
 The simulation runs on a 100×100 grid (for now, building faces later) representing a patch of concrete wall (more materials later), one step per day, for `YEARS` amount of years.
 
 1. `climate.py` pre-computes the whole climate history before the simulation starts. Each day is wet or dry. The chance of a wet day follows a monthly table (interpolated smoothly between month centers), and a persistence term makes wet days and dry days cluster into spells. On wet days, the rain amount is drawn from an exponential distribution.
@@ -59,6 +61,7 @@ Some parameters may later be removed.
 
 **Soon : finish climate engine and base components**
 - Add sun exposure/UV, wind and and their associated effects
+- Try to find a way to calculate this stupid sun exposure thing properly because there are like 25 thousand ways to do it
 - All of them as monthly tables (except pH), and later per region
 - Improve main model
 - Test each one alone with moss disabled, then connect them to moss.
