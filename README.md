@@ -60,15 +60,11 @@ Some parameters may later be removed.
 ## Roadmap
 
 **Soon : finish climate engine and base components**
-- Add sun exposure/UV, wind and and their associated effects
-- Try to find a way to calculate this stupid sun exposure thing properly because there are like 25 thousand ways to do it
-- All of them as monthly tables (except pH), and later per region
-- Improve main model
 - Test each one alone with moss disabled, then connect them to moss.
 - Switch moss death to dormant state for short term drying
 - Add different materials with associated parameters
 - Refine pH model, higher noise, take into account logarithmic scale, draw noise once per wet spell, store acid load (10-pH + rain_mm) to use later
-- Change humidity a bit, ie. add hmax and hmin at tmax and tmin
+- Change humidity a bit, ie. add hmax and hmin at tmax and tmin ?
 
 **Later : move to 3D**
 - Keep the simulation headless in Python (possibly Rust later) and feed the data to a separate renderer (Blender for very early tests, then UE5)
