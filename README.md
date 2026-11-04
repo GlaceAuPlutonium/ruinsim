@@ -1,62 +1,27 @@
 # Time damage simulation and rendering engine
 
 Simulating the damages of time on actual human structures, with real world data and realistic decay 🌿 🏢 \
-**WIP**
+
+### **WIP**
 
 ## What is this ?
 
 A project I've had in mind for a long time : simulating time on human infrastructures. \
-I've always loved the The Last Of Us or Horizon Zero Dawn world aesthetic, buildings decaying, nature taking control once again, so basically post-apo (or post-post-post apo for HZD). And that got me wondered : What if this building stood untounched for dozens or hundreds of years ? What would it look like ? \
+I've always loved the The Last Of Us or Horizon Zero Dawn world aesthetic, buildings decaying, nature taking control once again, so basically post-apo (or post-post-post apo for HZD). And that got me wondering : What if this building stood untounched for dozens or hundreds of years ? What would it look like ? \
 \
 That's the idea : Taking a normal building, passing it through an engine that simulates rain, weather, erosion, nature growing, materials deteriorating, structures failing and falling, etc.. and outputting a 3d environment you can explore and walk through.
 
 ## How the program works
 
-**⚠️ Outdated, i'll rewrite it**
+The simulation runs on a 100×100 grid (for now) representing a concrete slab, one step per day, for `YEARS` amount of years.
 
-The simulation runs on a 100×100 grid (for now, building faces later) representing a patch of concrete wall (more materials later), one step per day, for `YEARS` amount of years.
+1. `climate.py` pre-computes the full climate hisotry before the simulation : wet/dry Markovdays with spell clustering, gamma-distributed rain amounts, temperature,humidity, radiation, wind, all based off Lyon-Bron 1991–2020 normals, plus FAO-56 Penman-Monteith evaporation.
+2. `model.py` builds the slab (a porosity map) and runs the daily chain:rain fills each cell's pore storage (capacity = pore depth × porosity, mm) → excess runs off → water spreads, evaporates (scaled by the frozen fraction of that day) → a slow wetness memory tracks how long cells stayed wet → moss grows on that memory → moss builds soil, soil raises capacity.
+3. `main.py` ties everything together : climate, model over N years, history, plots.
+4. `render.py` draws the live 2×2 live view window and the final history plot.
 
-1. `climate.py` pre-computes the whole climate history before the simulation starts. Each day is wet or dry. The chance of a wet day follows a monthly table (interpolated smoothly between month centers), and a persistence term makes wet days and dry days cluster into spells. On wet days, the rain amount is drawn from an exponential distribution.
-2. `model.py` builds the wall and runs the simulation with `step`. At the start it creates the fixed porosity map and the empty state grids: dampness, damp memory, moss and soil.
-3. `main.py` ties everything together. It calculates the weather, loops `step` over every day, records mean values into `history`, refreshes the live view, saves `history.npz` and plots the full history.
-4. `render.py` draws the live 2×2 window and the final five-panel plot.
-5. `params.py` holds the tunable constants for water, moss and soil. (more later)
+`params.py` holds the constants.
 
-Each day in `step` goes through this chain:
-
-- **Surface**, the effective porosity is the bare wall plus whatever soil has built up. This sets a per-cell drying rate. \
-- **Water**, rain and leak (may be removed) are added, water spreads to the 4 neighbors, dries, and values are clipped to 0–1. \
-- **Damp memory**, a slow running average of dampness. \
-- **Moss**, grows where damp memory is above a threshold and dies (death will be changed to "inactivty" for short term drying) where it is below a lower one. Growth comes from random spores or from neighboring moss. \
-- **Soil**, built by moss and its fringe, washed away where there is no moss. Soil then changes porosity, which feeds back into drying. \
-
-## Parameters currently in play
-
-| Parameter | Value (current, may change) | Role |
-|---|---|---|
-| `SPREAD` | 0.2 | Diffusion to neighbors (must be ≤ 0.25) |
-| `DRYING` | 0.15 | Average daily drying rate |
-| `POROSITY_EFFECT` | 1.0 | How much porosity changes drying |
-| `MIN_DRYING` / `MAX_DRYING` | 0.01 / 0.9 | Safety bounds on drying |
-| `LEAK_AMOUNT` | 0.0 | Gutter leak (off) |
-| `MEMORY` | 0.02 | Speed of the damp-memory average |
-| `MOSS_GROW_ABOVE` / `MOSS_DIE_BELOW` | 0.22 / 0.18 | Growth and death thresholds |
-| `SPORE_CHANCE` | 0.00002 | Daily chance a spore lands on a cell |
-| `MOSS_GROWTH` / `MOSS_DIEBACK` | 0.006 / 0.01 | Growth and die-off rates |
-| `SOIL_BUILD` / `SOIL_LOSS` | 0.0008 / 0.0003 | Build-up and wash-off rates |
-| `SOIL_EFFECT` | 0.6 | Max share of the porosity gap soil can fill |
-| `RAIN_PROB_BY_MONTH` | 0.10–0.40 | Seasonal chance of a rainy day |
-| `RAIN_PERSISTENCE` | 0.3 | Clustering of wet and dry spells |
-| `MEAN_RAIN` | 0.12 | Mean rain amount on a wet day |
-| `SEED`, `size` | 48, 100 | Reproducibility and grid size |
-| `PH_VAR` | 0.15 | Rain pH variation |
-| `TEMP_PERSISTENCE` | 0.75 | Day-to-day correlation of temp anomaly |
-| `WET_DTR_EFFECT` | 0.35 | Wet days have a range ~35% smaller than dry days |
-| `DTR_NOISE` | 0.25 | Day-to-day variation of the range (fraction) |
-| `MIN_DTR` | 1.0 | Safety floor (°C) |
-| more needs to be added | more later | more later |
-
-Some parameters may later be removed.
 ## Roadmap
 
 **Soon : finish climate engine and base components**
@@ -79,9 +44,20 @@ Some parameters may later be removed.
 - Replace monthyl table with real location-specific climate data
 - Actual real world building but that seems a bit far-stretched
 
-## Dependencies
+## Running it
 
-- numpy
-- matplotlib
+### With uv (recommended)
+
+If you use `uv`:
+```plain
+uv sync
+uv run src/main.py
+```
+
+### Manually
+
+You can run it manually, you need the following dependencies :
+- `numpy`
+- `matplotlib`
 
 Using Python 3.15
