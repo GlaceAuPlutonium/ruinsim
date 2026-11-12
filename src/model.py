@@ -43,11 +43,11 @@ moss = np.zeros((size, size))
 soil = np.zeros((size, size))
 
 
-def step(rain, evap, w, mem, m, soil):
+def step(rain, evap, temp, w, mem, m, soil):
     # The surface today = bare slab + whatever soil has built up on it
     porosity_eff = porosity + SOIL_EFFECT * soil * (1 - porosity)
     phi = PHI_MIN + (PHI_MAX - PHI_MIN) * porosity_eff
-    cap = PORE_DEPTH_MM * phi # + DEPR_MM * hollows      # ~2-3 mm on average
+    cap = PORE_DEPTH_MM * phi # + DEPR_MM * hollows
 
     # Water
     w = w + rain #+ leak
@@ -58,21 +58,27 @@ def step(rain, evap, w, mem, m, soil):
     wet_frac = np.minimum(w / evap_cell, 1.0)             # fraction of the day it is wet
     w = np.maximum(w - evap_cell, 0)
 
+    f_T = cardinalTemp(temp)     # 0-1
+    active = wet_frac * f_T      # today's metabolic window
+
     mem = mem + MEMORY * (wet_frac - mem)
 
     # Moss
     if MOSS_ENABLE:
         can_grow = mem > MOSS_GROW_ABOVE
         dying = mem < MOSS_DIE_BELOW
+
         nearby_moss = neighborSum(m) / 4
         spore_lands = rng_bio.random(w.shape) < SPORE_CHANCE
-        growth = MOSS_GROWTH * (spore_lands + nearby_moss) * (1 - m) * can_grow
+
+        growth = MOSS_GROWTH * (spore_lands + nearby_moss) * (1 - m) * can_grow * active
         dieback = MOSS_DIEBACK * m * dying
         m = np.clip(m + growth - dieback, 0, 1)
 
     # Soil: built by moss and its fringe, washed off where there is no moss
         pressure = np.clip(m + nearby_moss, 0, 1)
-        soil = soil + SOIL_BUILD * pressure * (1 - soil) - SOIL_LOSS * soil * (1 - m)
+        wash = WASH_COEF * runoff ** WASH_EXP * (1 - pressure)
+        soil = soil + SOIL_BUILD * pressure * (1 - soil) - wash
         soil = np.clip(soil, 0, 1)
 
     return w, wet_frac, mem, m, soil
@@ -100,3 +106,10 @@ def evap_et0(day, temp, tmin, tmax, hum, ghi, wsu2): # mm.day, FAO-56 Penman-Mon
 def posTemp_frac(tmin, tmax): # Fraction of the day surface is above 0°C
     k = np.clip((tmin + tmax) / (tmax - tmin), -1, 1)
     return 0.5 + np.arcsin(k) / np.pi
+
+def cardinalTemp(temp):
+    a, b, c = MOSS_T_MIN, MOSS_T_OPT, MOSS_T_MAX
+    num = (temp - c) * (temp - a) ** 2
+    den = (b - a) * ((b - a) * (temp - b) - (b - c) * (b + a - 2 * temp))
+    f = np.where((temp > a) & (temp < c), num / np.where(den == 0, 1.0, den), 0.0)
+    return np.clip(f, 0.0, 1.0)

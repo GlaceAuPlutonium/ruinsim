@@ -43,22 +43,26 @@ assert SPREAD <= 0.25, "SPREAD must be <= 0.25 or the water spreading becomes un
 # Moss parameters
 MEMORY = 0.02
 MOSS_GROW_ABOVE = 0.22
-MOSS_DIE_BELOW = 0.18
+MOSS_DIE_BELOW = 0.10
 SPORE_CHANCE = 0.00002
-MOSS_GROWTH = 0.006
+MOSS_GROWTH = 0.03
 MOSS_DIEBACK = 0.01
+MOSS_T_MIN = 0
+MOSS_T_OPT = 18
+MOSS_T_MAX = 32
 
 MOSS_ENABLE = True
 
 # Soil parameters
 SOIL_BUILD = 0.0008      # per day: moss and its fringe build substrate
-SOIL_LOSS = 0.0003       # per day: rain washes soil off where no moss protects it
 SOIL_EFFECT = 0.6        # max fraction of the porosity gap that soil can fill
+WASH_COEF = 0.001
+WASH_EXP = 1.5
 
 
 ALTITUDE = 204
 ALBEDO = 0.35
 SURF_EVAP = 1.2
 
-PORE_DEPTH_MM = 10.0       # active depth of concrete that wets/dries within days
-PHI_MIN, PHI_MAX = 0.1, 0.15   # real porosity range of your porosity map
+PORE_DEPTH_MM = 10.0       # active depth of concrete that wets/dries within days, in mm
+PHI_MIN, PHI_MAX = 0.10, 0.15   # real porosity range of your porosity map
