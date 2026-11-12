@@ -50,6 +50,11 @@ MOSS_DIEBACK = 0.01
 MOSS_T_MIN = 0
 MOSS_T_OPT = 18
 MOSS_T_MAX = 32
+HUM_ACT_RH = 0.86     # ≈30% NP documented at 86% RH; lowest activations 76-80% (but lichens)
+HUM_SAT_RH = 0.95     # field bryophyte sites with RH >95% are continuously active
+VAPOR_EFF  = 0.28      # vapor-only NP ≈ 30-50% of liquid-water NP (Phinney/Worthy)
+GHI_SAT = 3.0       # MJ/m2/day ≈ 20% of ~15 MJ summer clear-sky — moss saturates well below full sun
+assert MOSS_T_MIN < MOSS_T_OPT < MOSS_T_MAX, "cardinal temps must be strictly ordered"
 
 MOSS_ENABLE = True
 

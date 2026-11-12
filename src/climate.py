@@ -1,7 +1,7 @@
 # Contains climate pre-calc algorithm. Rain, wet/dry spells, temperature, rain pH, humidity, GHI, wind
 import numpy as np
 
-from params import DTR_NOISE, HUM_NOISE, HUM_PERSISTENCE, HUM_TEMP_COUPLING, KT_NOISE, MIN_DTR, MIN_HUM, PH_VAR, RAIN_HUM_EFFECT, RAIN_PERSISTENCE, RAIN_SHAPE, TEMP_PERSISTENCE, WET_DTR_EFFECT, WET_KT_EFFECT, SUN_PERSISTENCE, WET_WS_EFFECT, WS_NOISE, WS_PERSISTENCE
+from params import ALBEDO, ALTITUDE, DTR_NOISE, HUM_NOISE, HUM_PERSISTENCE, HUM_TEMP_COUPLING, KT_NOISE, MIN_DTR, MIN_HUM, PH_VAR, RAIN_HUM_EFFECT, RAIN_PERSISTENCE, RAIN_SHAPE, TEMP_PERSISTENCE, WET_DTR_EFFECT, WET_KT_EFFECT, SUN_PERSISTENCE, WET_WS_EFFECT, WS_NOISE, WS_PERSISTENCE
 
 LATITUDE = 45.72
 G_SC = 0.082
@@ -160,3 +160,17 @@ def extraRad(day):
     dr = 1 + 0.033 * np.cos(2 * np.pi * n / DAYS_PER_YEAR) # earth-sun distance
     ws = sunsetHourAngle(day)
     return (24 * 60 / np.pi) * G_SC * dr * (ws * np.sin(phi) * np.sin(delta) + np.cos(phi) * np.cos(delta) * np.sin(ws))
+
+
+def esat(T): # saturation vapour pressure, kPa (Magnus / FAO-56 eq.11)
+    return 0.6108 * np.exp(17.27 * T / (T + 237.3))
+
+def evap_et0(day, temp, tmin, tmax, hum, ghi, wsu2): # mm.day, FAO-56 Penman-Monteith
+    es = (esat(tmin) + esat(tmax)) / 2
+    ea = hum * es
+    vpd = np.maximum(es-ea, 0)
+    delta = 4098 * es / (temp+237.3)**2         # slope of es(T), kPa/°C
+    gamma = 0.0658                              # kPa/°C at Lyon-Bron ~200 m
+    Rso = (0.75 + 2e-5*ALTITUDE) * extraRad(day)
+    Rn = (1 - ALBEDO)*ghi - 4.903e-9*((tmax+273.16)**4 + (tmin+273.16)**4)/2 * (0.34 - 0.14*np.sqrt(ea)) * (1.35*np.minimum(ghi/Rso,1) - 0.35)
+    return np.maximum((0.408*delta*Rn + gamma*(900/(temp+273))*wsu2*vpd) / (delta + gamma*(1+0.34*wsu2)), 0 )
