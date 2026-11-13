@@ -3,10 +3,6 @@ import numpy as np
 
 from params import *  # pyright: ignore[reportWildcardImportFromLibrary]
 
-# STATES:  water  [mm, 0..cap]   real water stock
-#          mem    [0..1]          EMA of wet_frac (~50-day), what moss reads
-#          moss   [0..1]          cover fraction
-#          soil   [0..1]          substrate built, raises capacity
 
 SEED = 48
 seed_texture, seed_weather, seed_bio, seed_ph, seed_temp, seed_dtr, seed_hum, seed_sun, seed_ws = np.random.SeedSequence(SEED).spawn(9)
@@ -22,7 +18,6 @@ rng_ws = np.random.default_rng(seed_ws)
 
 size = 100
 
-# Wall texture
 def smoothNoise(sigma):
     """Random noise blurred at a given scale (in cells), then normalized."""
     white = rng_texture.standard_normal((size, size))
@@ -35,7 +30,7 @@ def smoothNoise(sigma):
 
 mix = 0.6 * smoothNoise(6) + 0.4 * smoothNoise(2)
 mix = (mix - mix.mean()) / mix.std()
-porosity = 1 / (1 + np.exp(-1.5 * mix))     # the bare slab, fixed over time
+porosity = 1 / (1 + np.exp(-1.5 * mix))
 
 water = np.zeros((size, size))
 water_memory = np.zeros((size, size))
@@ -47,18 +42,17 @@ _a = np.log(2) / np.log((MOSS_T_MAX - MOSS_T_MIN) / (MOSS_T_OPT - MOSS_T_MIN)) #
 
 
 def step(rain, evap, temp, hum, ghi, w, mem, m, soil):
-    # The surface today = bare slab + whatever soil has built up on it
+    # the surface today = bare slab + whatever soil has built up on it
     porosity_eff = porosity + SOIL_EFFECT * soil * (1 - porosity)
     phi = PHI_MIN + (PHI_MAX - PHI_MIN) * porosity_eff
     cap = PORE_DEPTH_MM * phi # + DEPR_MM * hollows
 
-    # Water
     w = w + rain #+ dew #+ leak
     w = w + SPREAD * (neighborSum(w) - 4 * w)
-    runoff = np.maximum(w - cap, 0)                        # for soil washing
-    w = np.minimum(w, cap)                                # after rain, before drying
+    runoff = np.maximum(w - cap, 0)               # for soil washing
+    w = np.minimum(w, cap)                        # after rain, before drying
     evap_cell = max(evap * SURF_EVAP, 1e-6)
-    wet_frac = np.minimum(w / evap_cell, 1.0)             # fraction of the day it is wet
+    wet_frac = np.minimum(w / evap_cell, 1.0)    # fraction of the day it is wet
     w = np.maximum(w - evap_cell, 0)
 
     f_T = cardinalTemp(temp)     # 0-1
@@ -80,7 +74,6 @@ def step(rain, evap, temp, hum, ghi, w, mem, m, soil):
         dieback = MOSS_DIEBACK * m * dying
         m = np.clip(m + growth - dieback, 0, 1)
 
-    # Soil: built by moss and its fringe, washed off where there is no moss
         pressure = np.clip(m + nearby_moss, 0, 1)
         wash = WASH_COEF * runoff ** WASH_EXP * (1 - pressure)
         soil = soil + SOIL_BUILD * pressure * (1 - soil) - wash
@@ -95,7 +88,7 @@ def neighborSum(a):
     p = np.pad(a, 1, mode="edge")
     return p[:-2, 1:-1] + p[2:, 1:-1] + p[1:-1, :-2] + p[1:-1, 2:]
 
-def posTemp_frac(tmin, tmax): # Fraction of the day surface is above 0°C
+def posTemp_frac(tmin, tmax): # fraction of the day surface is above 0°C
     k = np.clip((tmin + tmax) / (tmax - tmin), -1, 1)
     return 0.5 + np.arcsin(k) / np.pi
 

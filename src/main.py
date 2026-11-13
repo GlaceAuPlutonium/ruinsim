@@ -4,7 +4,7 @@ from climate import DAYS_PER_YEAR, genClimate, evap_et0
 from model import posTemp_frac, water_memory, water, moss, porosity, rng_ph, rng_weather, rng_temp, rng_dtr, rng_hum, rng_sun, rng_ws, soil, step
 from render import LiveView, plotHistory
 
-YEARS = 60
+YEARS = 20
 
 n_days = DAYS_PER_YEAR * YEARS
 rain, pH, temp, tmin, tmax, humidity, ghi, ws, wd = genClimate(n_days, rng_weather, rng_ph, rng_temp, rng_dtr, rng_hum, rng_sun, rng_ws)
@@ -31,7 +31,7 @@ for t in range(n_days):
     moss_mean[t] = moss.mean()
     soil_mean[t] = soil.mean()
 
-    if t % 720 == 0:
+    if t % 120 == 0:
         view.update(t, wet_frac, moss, soil)
 
 history["moss"] = moss_mean

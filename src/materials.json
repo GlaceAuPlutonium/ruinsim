@@ -1,0 +1,128 @@
+{
+
+
+  "concrete": {
+    "porosity": {
+      "max": 0.15,
+      "min": 0.10,
+      "sigma_large": 6,
+      "sigma_small": 2,
+      "mix": [0.6, 0.4]
+    },
+    "pore_depth": 10,
+    "surf_evap": 1.2,
+    "albedo": {
+      "fresh": 0.35,
+      "aged": 0.55
+    },
+    "ph": {
+      "fresh": 13.0,
+      "aged": 8.5
+    },
+    "moss": true,
+    "soil": {
+      "build": 0.0008,
+      "wash_coef": 0.001,
+      "wash_exp": 1.5
+    }
+  },
+
+"steel": {
+  "porosity": {
+    "max": 0.02,
+    "min": 0.0,
+    "sigma_large": 1.5,
+    "sigma_small": 0.5,
+    "mix": [0.3, 0.7]
+  },
+  "pore_depth": 0.2,
+  "surf_evap": 1.2,
+  "albedo": {
+    "fresh": 0.55,
+    "aged": 0.3
+  },
+  "ph": {
+    "fresh": 7.0,
+    "aged": 5.5
+  },
+  "moss": true,
+  "soil": {
+    "build": 0.0008,
+    "wash_coef": 0.01,
+    "wash_exp": 1.5
+  }
+},
+
+"glass": {
+  "porosity": {
+    "max": 0.005,
+    "min": 0.0,
+    "sigma_large": 0.8,
+    "sigma_small": 0.3,
+    "mix": [0.5, 0.5]
+  },
+  "pore_depth": 0.05,
+  "surf_evap": 1.2,
+  "albedo": 0.10,
+  "ph": {
+    "fresh": 7.5,
+    "aged": 9.0
+  },
+  "moss": true,
+  "soil": {
+    "build": 0.0008,
+    "wash_coef": 0.02,
+    "wash_exp": 1.5
+  }
+},
+
+"plastic": {
+  "porosity": {
+    "max": 0.05,
+    "min": 0.01,
+    "sigma_large": 2,
+    "sigma_small": 0.6,
+    "mix": [0.3, 0.7]
+  },
+  "pore_depth": 0.3,
+  "surf_evap": 1.2,
+  "albedo": {
+    "fresh": 0.35,
+    "aged": 0.45
+  },
+  "ph": {
+    "fresh": 7.0,
+    "aged": 6
+  },
+  "moss": true,
+  "soil": {
+    "build": 0.0008,
+    "wash_coef": 0.008,
+    "wash_exp": 1.5
+  }
+},
+
+"brick": {
+  "porosity": {
+    "max": 0.35,
+    "min": 0.20,
+    "sigma_large": 3.5,
+    "sigma_small": 1.2,
+    "mix": [0.45, 0.55]
+  },
+  "pore_depth": 25,
+  "surf_evap": 1.2,
+  "albedo": 0.30,
+  "ph": {
+    "fresh": 8.0,
+    "aged": 7.0
+  },
+  "moss": true,
+  "soil": {
+    "build": 0.001,
+    "wash_coef": 0.0015,
+    "wash_exp": 1.5
+  }
+}
+
+}
