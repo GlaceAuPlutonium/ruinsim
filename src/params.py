@@ -1,3 +1,7 @@
+SIZE = 100
+ALTITUDE = 204
+
+
 # Rain
 RAIN_PERSISTENCE = 0.3
 RAIN_SHAPE = 0.7
@@ -33,8 +37,6 @@ WET_WS_EFFECT = 0.35
 WS_NOISE = 0.45
 WS_PERSISTENCE = 0.6
 
-
-
 # Water parameters (all rates are per day)
 SPREAD = 0.2             # must stay <= 0.25, see the assert below
 
@@ -59,15 +61,4 @@ assert MOSS_T_MIN < MOSS_T_OPT < MOSS_T_MAX, "cardinal temps must be strictly or
 MOSS_ENABLE = True
 
 # Soil parameters
-SOIL_BUILD = 0.0008      # per day: moss and its fringe build substrate
-SOIL_EFFECT = 0.6        # max fraction of the porosity gap that soil can fill
-WASH_COEF = 0.001
-WASH_EXP = 1.5
-
-
-ALTITUDE = 204
-ALBEDO = 0.35
-SURF_EVAP = 1.2
-
-PORE_DEPTH_MM = 10.0       # active depth of concrete that wets/dries within days, in mm
-PHI_MIN, PHI_MAX = 0.10, 0.15   # real porosity range of your porosity map
+SOIL_EFFECT = 0.6        # max fraction of the porosity gap that soil

@@ -1,4 +1,3 @@
-from climate import extraRad
 import numpy as np
 
 from params import *  # pyright: ignore[reportWildcardImportFromLibrary]
@@ -16,42 +15,23 @@ rng_hum = np.random.default_rng(seed_hum)
 rng_sun = np.random.default_rng(seed_sun)
 rng_ws = np.random.default_rng(seed_ws)
 
-size = 100
-
-def smoothNoise(sigma):
-    """Random noise blurred at a given scale (in cells), then normalized."""
-    white = rng_texture.standard_normal((size, size))
-    k = np.fft.fftfreq(size)
-    k2 = k[:, None] ** 2 + k[None, :] ** 2
-    blurred = np.fft.ifft2(np.fft.fft2(white) * np.exp(-2 * (np.pi * sigma) ** 2 * k2))
-    out = np.real(blurred)
-    return (out - out.mean()) / out.std()
-
-
-mix = 0.6 * smoothNoise(6) + 0.4 * smoothNoise(2)
-mix = (mix - mix.mean()) / mix.std()
-porosity = 1 / (1 + np.exp(-1.5 * mix))
-
-water = np.zeros((size, size))
-water_memory = np.zeros((size, size))
-moss = np.zeros((size, size))
-soil = np.zeros((size, size))
+size = SIZE
 
 _a = np.log(2) / np.log((MOSS_T_MAX - MOSS_T_MIN) / (MOSS_T_OPT - MOSS_T_MIN)) # for cardinalTemp
 
 
 
-def step(rain, evap, temp, hum, ghi, w, mem, m, soil):
+def step(mat, rain, evap, temp, hum, ghi, w, mem, m, soil):
     # the surface today = bare slab + whatever soil has built up on it
-    porosity_eff = porosity + SOIL_EFFECT * soil * (1 - porosity)
-    phi = PHI_MIN + (PHI_MAX - PHI_MIN) * porosity_eff
-    cap = PORE_DEPTH_MM * phi # + DEPR_MM * hollows
+    porosity_eff = mat.porosity + SOIL_EFFECT * soil * (1 - mat.porosity)
+    phi = mat.phi_min + (mat.phi_max - mat.phi_min) * porosity_eff
+    cap = mat.pore_depth * phi # + DEPR_MM * hollows
 
     w = w + rain #+ dew #+ leak
     w = w + SPREAD * (neighborSum(w) - 4 * w)
     runoff = np.maximum(w - cap, 0)               # for soil washing
     w = np.minimum(w, cap)                        # after rain, before drying
-    evap_cell = max(evap * SURF_EVAP, 1e-6)
+    evap_cell = max(evap * mat.surf_evap, 1e-6)
     wet_frac = np.minimum(w / evap_cell, 1.0)    # fraction of the day it is wet
     w = np.maximum(w - evap_cell, 0)
 
@@ -63,7 +43,7 @@ def step(rain, evap, temp, hum, ghi, w, mem, m, soil):
     mem = mem + MEMORY * (wet_frac - mem)
 
     # Moss
-    if MOSS_ENABLE:
+    if MOSS_ENABLE and mat.moss:
         can_grow = mem > MOSS_GROW_ABOVE
         dying = mem < MOSS_DIE_BELOW
 
@@ -75,8 +55,8 @@ def step(rain, evap, temp, hum, ghi, w, mem, m, soil):
         m = np.clip(m + growth - dieback, 0, 1)
 
         pressure = np.clip(m + nearby_moss, 0, 1)
-        wash = WASH_COEF * runoff ** WASH_EXP * (1 - pressure)
-        soil = soil + SOIL_BUILD * pressure * (1 - soil) - wash
+        wash = mat.wash_coef * runoff ** mat.wash_exp * (1 - pressure)
+        soil = soil + mat.soil_build * pressure * (1 - soil) - wash
         soil = np.clip(soil, 0, 1)
 
     return w, wet_frac, mem, m, soil

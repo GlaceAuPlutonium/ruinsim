@@ -6,12 +6,12 @@ from params import MOSS_DIE_BELOW, MOSS_GROW_ABOVE
 
 
 class LiveView:
-    def __init__(self, water, moss, soil, porosity):
+    def __init__(self, water, moss, soil, shape):
         self.fig, axs = plt.subplots(2, 2, figsize=(10, 9))
         self.img_damp = axs[0, 0].imshow(water, cmap="Blues", vmin=0, vmax=1)
         self.img_moss = axs[0, 1].imshow(moss, cmap="Greens", vmin=0, vmax=1)
         self.img_soil = axs[1, 0].imshow(soil, cmap="Oranges", vmin=0, vmax=1)
-        axs[1, 1].imshow(porosity, cmap="Greys", vmin=0, vmax=1)
+        axs[1, 1].imshow(shape, cmap="Greys", vmin=0, vmax=1)
         axs[0, 0].set_title("Water")
         axs[0, 1].set_title("Moss")
         axs[1, 0].set_title("Soil")
