@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from climate import DAYS_PER_YEAR, MONTH_NAMES
-from params import MOSS_DIE_BELOW, MOSS_GROW_ABOVE
 
 
 class LiveView:
@@ -39,7 +38,7 @@ def plotHistory(history, n_days):
     axes[2].plot(years, history["moss"], lw=0.8, color="tab:orange")
     axes[2].set_ylabel("Average moss coverage")
     axes[3].plot(years, history["soil"], lw=0.8, color="brown")
-    axes[3].set_ylabel("Average moss coverage")
+    axes[3].set_ylabel("Average soil coverage")
     #axes[3].plot(years, history["sat"], lw=0.8, color="lime")
     #axes[3].set_ylabel("mean satuartion")
     #axes[4].plot(years, history["water"], lw=0.8, color="blue")

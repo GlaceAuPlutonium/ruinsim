@@ -1,9 +1,7 @@
 import json
 from dataclasses import dataclass
-from params import SIZE
 
 import numpy as np
-
 
 
 @dataclass(eq=False)
@@ -27,19 +25,27 @@ def freshAged(v):
     """Accepts either a number or {"fresh": ..., "aged": ...}."""
     return (v["fresh"], v["aged"]) if isinstance(v, dict) else (v, v)
 
-def smoothNoise(sigma, rng, size):
-    white = rng.standard_normal((size, size))
-    k = np.fft.fftfreq(size)
-    k2 = k[:, None] ** 2 + k[None, :] ** 2
-    out = np.real(np.fft.ifft2(np.fft.fft2(white) * np.exp(-2 * (np.pi * sigma) ** 2 * k2)))
+
+
+def gridDims(length, width, res):
+    n_cols = int(np.floor(length / res + 0.5))
+    n_rows = int(np.floor(width / res + 0.5))
+    return n_rows, n_cols, width / n_rows, length / n_cols
+
+def smoothNoise(sigma, rng, n_rows, n_cols, cell_h, cell_w):
+    white = rng.standard_normal((n_rows, n_cols))
+    ky = np.fft.fftfreq(n_rows)
+    kx = np.fft.fftfreq(n_cols)
+    k2 = ky[:, None]**2 / cell_h**2 + kx[None, :]**2 / cell_w**2
+    out = np.real(np.fft.ifft2(np.fft.fft2(white) * np.exp(-2 * (np.pi * sigma)**2 * k2)))
     return (out - out.mean()) / out.std()
 
-def loadMaterial(name, rng, path="materials.json", size=SIZE):
-    d = json.load(open(path))[name]
+def loadMaterial(name, rng, n_rows, n_cols, cell_h, cell_w, path="materials.json"):
+    d = json.load(open(path))[name]  # noqa: SIM115
     p = d["porosity"]
 
-    mix = p["mix"][0] * smoothNoise(p["sigma_large"], rng, size) \
-        + p["mix"][1] * smoothNoise(p["sigma_small"], rng, size)
+    mix = p["mix"][0] * smoothNoise(p["sigma_large"], rng, n_rows, n_cols, cell_h, cell_w) \
+        + p["mix"][1] * smoothNoise(p["sigma_small"], rng, n_rows, n_cols, cell_h, cell_w)
     mix = (mix - mix.mean()) / mix.std()
     porosity = 1 / (1 + np.exp(-1.5 * mix))
 

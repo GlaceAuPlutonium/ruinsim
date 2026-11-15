@@ -1,11 +1,28 @@
 # Contains climate pre-calc algorithm. Rain, wet/dry spells, temperature, rain pH, humidity, GHI, wind
 import numpy as np
 
-from params import ALTITUDE, DTR_NOISE, HUM_NOISE, HUM_PERSISTENCE, HUM_TEMP_COUPLING, KT_NOISE, MIN_DTR, MIN_HUM, PH_VAR, RAIN_HUM_EFFECT, RAIN_PERSISTENCE, RAIN_SHAPE, TEMP_PERSISTENCE, WET_DTR_EFFECT, WET_KT_EFFECT, SUN_PERSISTENCE, WET_WS_EFFECT, WS_NOISE, WS_PERSISTENCE
+from params import (
+    DTR_NOISE,
+    HUM_NOISE,
+    HUM_PERSISTENCE,
+    HUM_TEMP_COUPLING,
+    KT_NOISE,
+    MIN_DTR,
+    MIN_HUM,
+    PH_VAR,
+    RAIN_HUM_EFFECT,
+    RAIN_PERSISTENCE,
+    RAIN_SHAPE,
+    SUN_PERSISTENCE,
+    TEMP_PERSISTENCE,
+    WET_DTR_EFFECT,
+    WET_KT_EFFECT,
+    WET_WS_EFFECT,
+    WS_NOISE,
+    WS_PERSISTENCE,
+)
 
-LATITUDE = 45.72
 G_SC = 0.082
-
 
 DAYS_PER_YEAR = 365
 MONTH_DAYS = np.array([31, 28.25, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31])
@@ -67,7 +84,7 @@ WD_MONTH = np.array([280.23, 299.65, 306.26, 302.52, 306.25, 322.25,
 # Wind data at 10m altitude from NASA/POWER Source Native Resolution Climatology in LST, MERRA-2 instrument, 1991-2020, Lyon-Bron station
 
 
-def genClimate(n_days, rng, rng_ph, rng_temp, rng_dtr, rng_hum, rng_sun, rng_ws):
+def genClimate(n_days, rng, rng_ph, rng_temp, rng_dtr, rng_hum, rng_sun, rng_ws, lat):
     rain = np.zeros(n_days)
     pH = np.full(n_days, np.nan)
     temp = np.zeros(n_days)
@@ -126,7 +143,7 @@ def genClimate(n_days, rng, rng_ph, rng_temp, rng_dtr, rng_hum, rng_sun, rng_ws)
         kt_max = 0.362 + 0.597 * kt_base
         zs = SUN_PERSISTENCE * zs + np.sqrt(1 - SUN_PERSISTENCE**2) * rng_sun.standard_normal()
         kt = np.clip(kt_base - WET_KT_EFFECT * (was_wet - p) + KT_NOISE * zs, 0.05, kt_max) # Clasical Bendt model takes 0.05 as a minimum,and gives kt_max = 0.362 + 0.597 * mean_monthly_kt. From Polo & al. on radiation modeling
-        ghi[day] = kt * extraRad(day) # maybe make sun_persistence/kt_noise change seasonaly ?
+        ghi[day] = kt * extraRad(day, lat) # maybe make sun_persistence/kt_noise change seasonaly ?
 
         # wind
         ws_base = np.interp(day % DAYS_PER_YEAR, month_centers, WS_MONTH, period=DAYS_PER_YEAR)
@@ -147,30 +164,30 @@ def spellLengths(is_wet):
     dry = [len(r) for r in runs if not r[0]]
     return wet, dry
 
-def sunsetHourAngle(day):
+def sunsetHourAngle(day, lat):
     n = day % DAYS_PER_YEAR + 1
-    phi = np.radians(LATITUDE)
+    phi = np.radians(lat)
     delta = 0.409 * np.sin(2 * np.pi * n / DAYS_PER_YEAR - 1.39)   # declination
     return np.arccos(np.clip(-np.tan(phi) * np.tan(delta), -1, 1))
 
-def extraRad(day):
+def extraRad(day, lat):
     n = day % DAYS_PER_YEAR + 1
-    phi = np.radians(LATITUDE)
+    phi = np.radians(lat)
     delta = 0.409 * np.sin(2 * np.pi * n / DAYS_PER_YEAR - 1.39) # declination
     dr = 1 + 0.033 * np.cos(2 * np.pi * n / DAYS_PER_YEAR) # earth-sun distance
-    ws = sunsetHourAngle(day)
+    ws = sunsetHourAngle(day, lat)
     return (24 * 60 / np.pi) * G_SC * dr * (ws * np.sin(phi) * np.sin(delta) + np.cos(phi) * np.cos(delta) * np.sin(ws))
 
 
 def esat(T): # saturation vapour pressure, kPa (Magnus / FAO-56 eq.11)
     return 0.6108 * np.exp(17.27 * T / (T + 237.3))
 
-def evap_et0(day, temp, tmin, tmax, hum, ghi, wsu2, albedo): # mm.day, FAO-56 Penman-Monteith
+def evap_et0(day, temp, tmin, tmax, hum, ghi, wsu2, albedo, lat, alt): # mm.day, FAO-56 Penman-Monteith
     es = (esat(tmin) + esat(tmax)) / 2
     ea = hum * es
     vpd = np.maximum(es-ea, 0)
     delta = 4098 * es / (temp+237.3)**2         # slope of es(T), kPa/°C
     gamma = 0.0658                              # kPa/°C at Lyon-Bron ~200 m
-    Rso = (0.75 + 2e-5*ALTITUDE) * extraRad(day)
+    Rso = (0.75 + 2e-5*alt) * extraRad(day, lat)
     Rn = (1 - albedo)*ghi - 4.903e-9*((tmax+273.16)**4 + (tmin+273.16)**4)/2 * (0.34 - 0.14*np.sqrt(ea)) * (1.35*np.minimum(ghi/Rso,1) - 0.35)
     return np.maximum((0.408*delta*Rn + gamma*(900/(temp+273))*wsu2*vpd) / (delta + gamma*(1+0.34*wsu2)), 0 )

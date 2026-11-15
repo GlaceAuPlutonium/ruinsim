@@ -1,0 +1,29 @@
+{
+
+  "version": 1,
+  "site": {
+    "latitude": 45.72,
+    "altitude": 204
+  },
+  "resolution_m": 0.01,
+  "buildings": [
+    { "id": "build1",
+      "objects": [
+        { "id": "obj1",
+          "faces": [
+            { "id": "face1",
+              "length": 1.7,
+              "width": 0.8,
+              "material": "concrete",
+              "az_deg": 180,
+              "alt_deg": 90,
+              "maps": {
+                "sun": "maps/face1_sun.npy",
+                "rain": "maps/face1_rain.npy"
+              }
+            }
+          ]}
+      ]}
+  ]
+
+}
