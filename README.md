@@ -59,5 +59,7 @@ uv run src/main.py
 You can run it manually, you need the following dependencies :
 - `numpy`
 - `matplotlib`
+- `dataclass`
+- `json`
 
 Using Python 3.15

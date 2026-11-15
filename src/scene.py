@@ -40,4 +40,4 @@ def loadScene(path="scene.json"):
                     sun_map=maps.get("sun"),
                     rain_map=maps.get("rain"),
                 ))
-    return Scene(Site(d["site"]["latitude"], d["site"]["altitude"]), d["resolution_m"], faces)
+    return Scene(Site(d["site"]["latitude"], d["site"]["altitude"]), d["resolution"], faces)
