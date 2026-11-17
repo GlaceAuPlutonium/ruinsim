@@ -24,14 +24,7 @@ The simulation runs on a 100×100 grid (for now) representing a concrete slab, o
 
 ## Roadmap
 
-**Soon : finish climate engine and base components**
-- Test each one alone with moss disabled, then connect them to moss.
-- Switch moss death to dormant state for short term drying
-- Add different materials with associated parameters
-- Refine pH model, higher noise, take into account logarithmic scale, draw noise once per wet spell, store acid load (10-pH + rain_mm) to use later
-- Change humidity a bit, ie. add hmax and hmin at tmax and tmin ?
-
-**Later : move to 3D**
+**Soon : it's 3D time**
 - Keep the simulation headless in Python (possibly Rust later) and feed the data to a separate renderer (Blender for very early tests, then UE5)
 - Get UE5 to send back heightmap before simulations by raycasting to deduce sun/shading maps, etc... Also AO and curvature maps, stuff like that
 - Try to reach this kind of setup : UE5 bakes scene → sends data to sim engine → engine does its magic → sends back data to UE5 as maps (and 3d states later) → UE5 reconstructs the decayed scene based off simulated maps

@@ -1,10 +1,10 @@
 import zlib
 
-from export import exportMaps
 import matplotlib.pyplot as plt
 import numpy as np
 
 from climate import DAYS_PER_YEAR, evap_et0, genClimate
+from export import exportMaps
 from materials import gridDims, loadMaterial
 from model import posTemp_frac, step
 from render import LiveView, plotHistory
@@ -23,8 +23,8 @@ from seed import (
 
 def faceRngs(face):
     ss = np.random.SeedSequence([SEED, zlib.crc32(face.id.encode())])
-    s_tex, s_bio = ss.spawn(2)
-    return np.random.default_rng(s_tex), np.random.default_rng(s_bio)
+    seed_tex, seed_bio = ss.spawn(2)
+    return np.random.default_rng(seed_tex), np.random.default_rng(seed_bio)
 
 def simulateFace(face, res, n_days, clim, live=False):
     rng_tex, rng_bio = faceRngs(face)
