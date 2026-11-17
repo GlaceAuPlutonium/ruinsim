@@ -11,3 +11,4 @@ wheels/
 .old
 *.npz
 .todo
+maps/

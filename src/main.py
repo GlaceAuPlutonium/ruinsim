@@ -1,5 +1,6 @@
 import zlib
 
+from export import exportMaps
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -45,10 +46,12 @@ def simulateFace(face, res, n_days, clim, live=False):
         if view and t % 360 == 0:
             view.update(t, wet_frac, moss, soil)
 
-    return {**clim, "evap": evap, "moss": moss_mean, "soil": soil_mean}
+    hist = {**clim, "evap": evap, "moss": moss_mean, "soil": soil_mean}
+    maps = {"moss": moss, "soil": soil, "mem": water_memory, "porosity": mat.porosity}
+    return hist, maps
 
 
-YEARS = 30
+YEARS = 20
 
 scene = loadScene()
 n_days = DAYS_PER_YEAR * YEARS
@@ -59,8 +62,10 @@ clim = {"rain": rain, "temp": temp, "tmin": tmin, "tmax": tmax, "hum": hum, "ghi
 
 results = {}
 for face in scene.faces:
-    results[face.id] = simulateFace(face, scene.res, n_days, clim, live=(len(scene.faces)==1))
-    np.savez(f"history_{face.id.replace('/', '_')}.npz", **results[face.id])
+    hist, maps = simulateFace(face, scene.res, n_days, clim, live=(len(scene.faces)==1))
+    results[face.id] = hist
+    np.savez(f"hist_{face.id.replace('/', '_')}.npz", **results[face.id])
+    exportMaps(face, maps)
 
 for face_id, h in results.items():
     plotHistory(h, n_days, title=face_id)
