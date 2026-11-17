@@ -1,13 +1,12 @@
 import numpy as np
 
 from params import *  # pyright: ignore[reportWildcardImportFromLibrary]
-from seed import rng_bio
 
 _a = np.log(2) / np.log((MOSS_T_MAX - MOSS_T_MIN) / (MOSS_T_OPT - MOSS_T_MIN)) # for cardinalTemp
 
 
 
-def step(mat, rain, evap, temp, hum, ghi, w, mem, m, soil):
+def step(mat, rain, evap, temp, hum, ghi, w, mem, m, soil, rng_bio):
     # the surface today = bare slab + whatever soil has built up on it
     porosity_eff = mat.porosity + SOIL_EFFECT * soil * (1 - mat.porosity)
     phi = mat.phi_min + (mat.phi_max - mat.phi_min) * porosity_eff

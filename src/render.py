@@ -14,7 +14,7 @@ class LiveView:
         axs[0, 0].set_title("Water")
         axs[0, 1].set_title("Moss")
         axs[1, 0].set_title("Soil")
-        axs[1, 1].set_title("Porosity of the bare wall (dark = holds water)")
+        axs[1, 1].set_title("Porosity")
 
     def update(self, t, water, moss, soil):
         self.img_damp.set_data(water)
@@ -26,9 +26,11 @@ class LiveView:
 
 
 # Plot the history
-def plotHistory(history, n_days):
+def plotHistory(history, n_days, title):
     years = np.arange(n_days) / DAYS_PER_YEAR
-    _fig2, axes = plt.subplots(4, 1, figsize=(11, 11), sharex=True)
+
+    _fig, axes = plt.subplots(4, 1, figsize=(11, 11), sharex=True)
+    _fig.suptitle(title)
     axes[0].plot(years, history["rain"], lw=0.6)
     axes[0].set_ylabel("rain / day")
     axes[1].plot(years, history["temp"], lw=0.8, color="purple")
@@ -47,4 +49,3 @@ def plotHistory(history, n_days):
     #axes[5].set_ylabel("water memory")
     axes[3].set_xlabel("years")
     plt.tight_layout()
-    plt.show()

@@ -1,6 +1,6 @@
 import numpy as np
 
-SEED = 48
+SEED = 1685
 seed_texture, seed_weather, seed_bio, seed_ph, seed_temp, seed_dtr, seed_hum, seed_sun, seed_ws = np.random.SeedSequence(SEED).spawn(9)
 rng_texture = np.random.default_rng(seed_texture)
 rng_weather = np.random.default_rng(seed_weather)

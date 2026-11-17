@@ -12,9 +12,20 @@
         { "id": "obj1",
           "faces": [
             { "id": "face1",
-              "length": 1.7,
-              "width": 0.8,
+              "length": 1.9,
+              "width": 1.3,
               "material": "concrete",
+              "az_deg": 90,
+              "alt_deg": 45,
+              "maps": {
+                "sun": "maps/face1_sun.npy",
+                "rain": "maps/face1_rain.npy"
+              }
+            },
+            { "id": "face2",
+              "length": 0.9,
+              "width": 1.5,
+              "material": "brick",
               "az_deg": 180,
               "alt_deg": 90,
               "maps": {
